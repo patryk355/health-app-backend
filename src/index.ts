@@ -1,14 +1,17 @@
 import express, {Express, Request, Response} from 'express';
 import dotenv from 'dotenv';
-import cors from 'cors';
+import cors, {CorsOptions} from 'cors';
 import bodyParser from 'body-parser';
+
+import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
 
 dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 8080;
 
-const corsOptions = {
+const corsOptions: CorsOptions = {
   origin: process.env.FRONTEND_URL
 };
 
@@ -22,6 +25,13 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+
+app.use((_req: Request, res: Response) => {
+  res.status(404).json('Could not find this route.');
+});
 
 app.listen(port, () => {
   console.debug(`Server is running on port: ${port}`);
