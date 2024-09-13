@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../db';
 import {User} from '../types/user';
+import {Role, RoleName} from '../types/role';
+import {getRole} from '../utils/role';
 
 export const auth = async (req: Request, res: Response, next: NextFunction) => {
   if (!process.env.JWT_KEY) {
@@ -38,7 +40,6 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
   let isValidPassword = false;
   try {
     isValidPassword = await bcrypt.compare(password, existingUser.password);
-    console.log('isValidPassword', isValidPassword, password, existingUser.password);
   } catch (err) {
     return res.status(500).json('Could not log you in, please check your credentials and try again.');
   }
@@ -58,11 +59,17 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
     return res.status(500).json('Logging in failed, please try again.');
   }
 
+  const role = await getRole(existingUser.role_id);
+
+  if (!role) {
+    return res.status(403).json('User does not exists.');
+  }
+
   res.status(201).json({
     id: existingUser.id,
     email: existingUser.email,
     username: existingUser.username,
-    role_id: existingUser.role_id,
+    role: role,
     token: token
   });
 };
