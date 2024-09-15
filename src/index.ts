@@ -4,6 +4,9 @@ import cors, {CorsOptions} from 'cors';
 import bodyParser from 'body-parser';
 
 import authRoutes from './routes/auth.routes';
+import categoryRoutes from './routes/category.routes';
+import goodnessRoutes from './routes/goodness.routes';
+import mineralRoutes from './routes/mineral.routes';
 import userRoutes from './routes/user.routes';
 
 dotenv.config();
@@ -27,6 +30,9 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/goodness', goodnessRoutes);
+app.use('/api/minerals', mineralRoutes);
 app.use('/api/users', userRoutes);
 
 app.use((_req: Request, res: Response) => {
