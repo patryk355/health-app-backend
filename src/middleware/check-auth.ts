@@ -1,10 +1,15 @@
 import {Request, Response, NextFunction} from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, {JwtPayload} from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import {RoleName} from '../types/role';
 
 dotenv.config();
 
-const checkAuth = (req: Request, res: Response, next: NextFunction) => {
+interface DecodedToken extends JwtPayload {
+  role: RoleName;
+}
+
+const checkAuth = (req: Request, res: Response, next: NextFunction, checkIsAdmin = false) => {
   if (req.method === 'OPTIONS') {
     return next();
   }
@@ -17,7 +22,10 @@ const checkAuth = (req: Request, res: Response, next: NextFunction) => {
     if (!token) {
       return res.status(401).json('Authentication failed!');
     }
-    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
+    const decodedToken = jwt.verify(token, process.env.JWT_KEY) as DecodedToken;
+    if (checkIsAdmin && decodedToken.role !== 'admin') {
+      return res.status(401).json('Permission denied!');
+    }
     next();
   } catch (err) {
     res.status(401).json('Authentication failed!');
