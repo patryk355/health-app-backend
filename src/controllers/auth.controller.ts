@@ -2,9 +2,8 @@ import {Response, Request, NextFunction} from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../db';
-import {User} from '../types/user';
-import {Role, RoleName} from '../types/role';
 import {getRole} from '../utils/role';
+import {User} from '../types/user';
 
 export const auth = async (req: Request, res: Response, next: NextFunction) => {
   if (!process.env.JWT_KEY) {
@@ -48,21 +47,22 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
     return res.status(403).json('Invalid credentials, could not log you in.');
   }
 
+  const role = await getRole(existingUser.role_id);
+
+  if (!role) {
+    return res.status(403).json('User does not exists.');
+  }
+
   let token;
 
   try {
     token = jwt.sign({
       userId: existingUser.id,
-      email: existingUser.email
+      email: existingUser.email,
+      role: role
     }, process.env.JWT_KEY);
   } catch (err) {
     return res.status(500).json('Logging in failed, please try again.');
-  }
-
-  const role = await getRole(existingUser.role_id);
-
-  if (!role) {
-    return res.status(403).json('User does not exists.');
   }
 
   res.status(201).json({
