@@ -8,6 +8,7 @@ import categoryRoutes from './routes/category.routes';
 import goodnessRoutes from './routes/goodness.routes';
 import mineralRoutes from './routes/mineral.routes';
 import productRoutes from './routes/product.routes';
+import receiptRoutes from './routes/receipt.routes';
 import userRoutes from './routes/user.routes';
 
 dotenv.config();
@@ -22,7 +23,7 @@ const corsOptions: CorsOptions = {
 app.use(bodyParser.json());
 app.use(cors(corsOptions));
 
-app.use((req, res, next) => {
+app.use((_req, res, next) => {
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   next();
@@ -35,6 +36,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/goodness', goodnessRoutes);
 app.use('/api/minerals', mineralRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/receipts', receiptRoutes);
 app.use('/api/users', userRoutes);
 
 app.use((_req: Request, res: Response) => {
