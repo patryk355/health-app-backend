@@ -7,3 +7,9 @@ export interface User extends RowDataPacket {
   password: string;
   role_id: number;
 }
+
+export interface CreateUser {
+  email?: unknown;
+  username?: unknown;
+  password?: unknown;
+}
