@@ -136,3 +136,32 @@ export const deleteUser = async (req: Request, res: Response) => {
     res.status(500).json('Internal Server Error');
   }
 };
+
+export const updateUser = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id;
+    if (!userId) {
+      return res.status(400).json('Invalid ID.');
+    }
+    const {username} = req.body;
+    if (!username || username.trim().length === 0) {
+      return res.status(400).json('Username is required');
+    }
+
+    const sql1 = 'SELECT id FROM `users` WHERE id = ?';
+    const connection = await pool.getConnection();
+    const [users] = await connection.execute<User[]>(sql1, [userId]);
+
+    if (users.length === 0) {
+      return res.status(403).json('User not found.');
+    }
+
+    const sql2 = 'UPDATE `users` SET username=? WHERE id = ?';
+    await connection.execute(sql2, [username.trim(), userId]);
+    connection.release();
+    res.status(200).json('User updated successfully.');
+  } catch (error) {
+    console.error('User :: updateUser', error);
+    res.status(500).json('Internal Server Error');
+  }
+};
