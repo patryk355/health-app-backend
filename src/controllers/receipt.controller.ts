@@ -1,5 +1,8 @@
 import {Response, Request} from 'express';
+import {ResultSetHeader} from 'mysql2';
+
 import pool from '../db';
+import {validateCreateReceipt} from '../validators/receipt.validator';
 import {Receipt} from '../types/receipt';
 
 export const getReceipts = async (req: Request, res: Response) => {
@@ -12,9 +15,45 @@ export const getReceipts = async (req: Request, res: Response) => {
     const connection = await pool.getConnection();
     const [result] = await connection.execute<Receipt[]>(sql);
     connection.release();
-    res.status(201).json(result);
+    const _result = result.map((receipt) => {
+      receipt.ingredients = JSON.parse(receipt.ingredients);
+      receipt.steps = JSON.parse(receipt.steps);
+      return receipt;
+    });
+    res.status(201).json(_result);
   } catch (error) {
     console.error('Receipt :: getReceipts', error);
+    res.status(500).json('Internal Server Error');
+  }
+};
+
+export const createReceipt = async (req: Request, res: Response) => {
+  try {
+    const {
+      name,
+      description,
+      ingredients,
+      steps,
+    } = req.body;
+
+    const errors = validateCreateReceipt(req.body);
+    if (errors.length > 0) {
+      return res.status(400).json(errors);
+    }
+
+    const sql1 = 'INSERT INTO `receipts` (name, description, ingredients, steps, active) VALUES (?, ?, ?, ?, false)';
+    const connection = await pool.getConnection();
+    const [result] = await connection.execute<ResultSetHeader>(sql1, [
+      name,
+      description || '',
+      JSON.stringify(ingredients),
+      JSON.stringify(steps),
+    ]);
+    console.debug('createReceipt :: Successfully created receipt:', result.insertId);
+    connection.release();
+    res.status(201).json({id: result.insertId});
+  } catch (error) {
+    console.error('Receipt :: createReceipt', error);
     res.status(500).json('Internal Server Error');
   }
 };
