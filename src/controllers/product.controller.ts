@@ -4,6 +4,8 @@ import {ResultSetHeader} from 'mysql2';
 import pool from '../db';
 import {validateCreateProduct} from '../validators/product.validator';
 import {Product} from '../types/product';
+import {getProductMinerals} from '../utils/mineral';
+import {getProductGoodness} from '../utils/goodness';
 
 export const getProducts = async (_req: Request, res: Response) => {
   try {
@@ -18,6 +20,40 @@ export const getProducts = async (_req: Request, res: Response) => {
     res.status(201).json(_result);
   } catch (error) {
     console.error('Product :: getProducts', error);
+    res.status(500).json('Internal Server Error');
+  }
+};
+
+export const getProduct = async (req: Request, res: Response) => {
+  try {
+    const {id} = req.params;
+
+    if (!id) {
+      return res.status(400).json('Invalid ID.');
+    }
+
+    const sql = 'SELECT id, name, description, advantages, disadvantages, contraindications, images, category_id FROM `products` WHERE id = ?';
+    const connection = await pool.getConnection();
+    const [result] = await connection.execute<Product[]>(sql, [id]);
+    connection.release();
+    if (result.length === 0) {
+      return res.status(403).json('Product not found.');
+    }
+    const _result = result[0];
+    _result.images = JSON.parse(_result.images);
+    const minerals = await getProductMinerals(parseInt(id));
+    _result.minerals = minerals.map((mineral) => ({
+      mineral_id: mineral.mineral_id,
+      amount: parseFloat(mineral.amount),
+    }));
+    const goodness = await getProductGoodness(parseInt(id));
+    _result.goodness = goodness.map((item) => ({
+      goodness_id: item.goodness_id,
+      amount: parseFloat(item.amount),
+    }));
+    res.status(201).json(_result);
+  } catch (error) {
+    console.error('Product :: getProduct', error);
     res.status(500).json('Internal Server Error');
   }
 };
