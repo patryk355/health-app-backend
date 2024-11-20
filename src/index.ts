@@ -8,7 +8,7 @@ import categoryRoutes from './routes/category.routes';
 import goodnessRoutes from './routes/goodness.routes';
 import mineralRoutes from './routes/mineral.routes';
 import productRoutes from './routes/product.routes';
-import receiptRoutes from './routes/receipt.routes';
+import recipeRoutes from './routes/recipe.routes';
 import userRoutes from './routes/user.routes';
 
 dotenv.config();
@@ -36,7 +36,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/goodness', goodnessRoutes);
 app.use('/api/minerals', mineralRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/receipts', receiptRoutes);
+app.use('/api/recipes', recipeRoutes);
 app.use('/api/users', userRoutes);
 
 app.use((_req: Request, res: Response) => {

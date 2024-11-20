@@ -1,31 +1,31 @@
-import {Receipt} from '../types/receipt';
+import {Recipe} from '../types/recipe';
 
-export const validateCreateReceipt = (receipt: Receipt) => {
+export const validateCreateRecipe = (recipe: Recipe) => {
   const errors: string[] = [];
 
-  if (!receipt?.name) {
+  if (!recipe?.name) {
     errors.push('Name is required.');
   }
 
-  if (!receipt?.ingredients) {
+  if (!recipe?.ingredients) {
     errors.push('Ingredients are required.');
   } else {
-    if (!Array.isArray(receipt.ingredients)) {
+    if (!Array.isArray(recipe.ingredients)) {
       errors.push('Ingredients should be an array.');
     } else {
-      if (receipt.ingredients.some((ingredient) => typeof ingredient !== 'string')) {
+      if (recipe.ingredients.some((ingredient) => typeof ingredient !== 'string')) {
         errors.push('Ingredients should be an array of strings.');
       }
     }
   }
 
-  if (!receipt?.steps) {
+  if (!recipe?.steps) {
     errors.push('Steps are required.');
   } else {
-    if (!Array.isArray(receipt.steps)) {
+    if (!Array.isArray(recipe.steps)) {
       errors.push('Steps should be an array.');
     } else {
-      if (receipt.steps.some((step) => typeof step !== 'string')) {
+      if (recipe.steps.some((step) => typeof step !== 'string')) {
         errors.push('Steps should be an array of strings.');
       }
     }
