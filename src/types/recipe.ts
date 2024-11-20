@@ -6,5 +6,6 @@ export interface Recipe extends RowDataPacket {
   description: string;
   ingredients: string;
   steps: string;
+  images: string;
   active: boolean;
 }
