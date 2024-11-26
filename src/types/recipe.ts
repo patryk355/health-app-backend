@@ -8,4 +8,5 @@ export interface Recipe extends RowDataPacket {
   steps: string;
   images: string;
   active: boolean;
+  created_by: number | null;
 }

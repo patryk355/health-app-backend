@@ -4,16 +4,17 @@ import {ResultSetHeader} from 'mysql2';
 import pool from '../db';
 import {validateCreateRecipe} from '../validators/recipe.validator';
 import {getRecipeProducts} from '../utils/recipe';
+import {getUserDataFromToken} from '../utils/user';
 import {Recipe} from '../types/recipe';
 
 export const getRecipes = async (req: Request, res: Response) => {
   try {
     const {active} = req.query;
-    let sql = 'SELECT id, name, description, ingredients, steps, active FROM `recipes`';
+    let sql = 'SELECT id, name, description, ingredients, steps, active, created_by FROM `recipes`';
     if (active === 'false') {
-      sql = 'SELECT id, name, description, ingredients, steps, active FROM `recipes` WHERE `active`=0';
+      sql = 'SELECT id, name, description, ingredients, steps, active, created_by FROM `recipes` WHERE `active`=0';
     } else if (active === 'true') {
-      sql = 'SELECT id, name, description, ingredients, steps, images, active FROM `recipes` WHERE `active`=1';
+      sql = 'SELECT id, name, description, ingredients, steps, images, active, created_by FROM `recipes` WHERE `active`=1';
     }
     const connection = await pool.getConnection();
     const [result] = await connection.execute<Recipe[]>(sql);
@@ -37,7 +38,7 @@ export const getRecipe = async (req: Request, res: Response) => {
     if (!id) {
       return res.status(400).json('Invalid recipe ID.');
     }
-    const sql = 'SELECT id, name, description, ingredients, steps, images, active FROM `recipes` WHERE id = ?';
+    const sql = 'SELECT id, name, description, ingredients, steps, images, active, created_by FROM `recipes` WHERE id = ?';
     const connection = await pool.getConnection();
     const [result] = await connection.execute<Recipe[]>(sql, [id]);
     connection.release();
@@ -64,22 +65,39 @@ export const createRecipe = async (req: Request, res: Response) => {
       description,
       ingredients,
       steps,
+      images,
+      products,
     } = req.body;
+    const userData = getUserDataFromToken(req);
+    const userId = typeof userData?.userId === 'number' ? userData.userId : null;
 
     const errors = validateCreateRecipe(req.body);
     if (errors.length > 0) {
       return res.status(400).json(errors);
     }
 
-    const sql1 = 'INSERT INTO `recipes` (name, description, ingredients, steps, active) VALUES (?, ?, ?, ?, false)';
+    const sql1 = 'INSERT INTO `recipes` (name, description, ingredients, steps, images, created_by, active) VALUES (?, ?, ?, ?, ?, ?, false)';
     const connection = await pool.getConnection();
     const [result] = await connection.execute<ResultSetHeader>(sql1, [
       name,
       description || '',
       JSON.stringify(ingredients),
       JSON.stringify(steps),
+      JSON.stringify(images),
+      userId,
     ]);
     console.debug('createRecipe :: Successfully created recipe:', result.insertId);
+    const sql2 = 'INSERT INTO `recipe_product` (recipe_id, product_id) VALUES (?, ?)';
+    if (products && Array.isArray(products)) {
+      for (const productId of products) {
+        if (typeof productId === 'number') {
+          await connection.execute<ResultSetHeader>(sql2, [
+            result.insertId,
+            productId,
+          ]);
+        }
+      }
+    }
     connection.release();
     res.status(201).json({id: result.insertId});
   } catch (error) {
@@ -106,6 +124,7 @@ export const deleteRecipe = async (req: Request, res: Response) => {
     const sql2 = 'DELETE FROM `recipes` WHERE id = ?';
     await connection.execute(sql2, [id]);
     connection.release();
+    console.debug('deleteRecipe :: Successfully deleted recipe:', id);
     res.status(200).json('Recipe deleted successfully.');
   } catch (error) {
     console.error('Recipe :: deleteRecipe', error);

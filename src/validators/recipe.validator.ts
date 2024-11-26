@@ -31,5 +31,17 @@ export const validateCreateRecipe = (recipe: Recipe) => {
     }
   }
 
+  if (!recipe?.images) {
+    errors.push('Images are required.');
+  } else {
+    if (!Array.isArray(recipe.images)) {
+      errors.push('Images should be an array.');
+    } else {
+      if (recipe.images.some((image) => typeof image !== 'string')) {
+        errors.push('Images should be an array of strings.');
+      }
+    }
+  }
+
   return errors;
 };

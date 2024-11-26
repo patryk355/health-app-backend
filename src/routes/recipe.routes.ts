@@ -12,6 +12,10 @@ const router = express.Router();
 router.get('/', getRecipes);
 router.get('/:id', getRecipe);
 router.use((req, res, next) => {
+  checkAuth(req, res, next);
+});
+router.post('/', createRecipe);
+router.use((req, res, next) => {
   checkAuth(req, res, next, true);
 });
 router.post('/', createRecipe);
