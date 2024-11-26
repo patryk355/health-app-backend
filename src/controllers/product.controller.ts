@@ -6,6 +6,7 @@ import {validateCreateProduct} from '../validators/product.validator';
 import {Product} from '../types/product';
 import {getProductMinerals} from '../utils/mineral';
 import {getProductGoodness} from '../utils/goodness';
+import {getProductRecipes} from '../utils/product';
 
 export const getProducts = async (_req: Request, res: Response) => {
   try {
@@ -51,6 +52,8 @@ export const getProduct = async (req: Request, res: Response) => {
       goodness_id: item.goodness_id,
       amount: parseFloat(item.amount),
     }));
+    const recipes = await getProductRecipes(parseInt(id));
+    _result.recipes = recipes;
     res.status(201).json(_result);
   } catch (error) {
     console.error('Product :: getProduct', error);
