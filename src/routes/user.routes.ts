@@ -1,5 +1,5 @@
 import express from 'express';
-import {getLoggedUser, getUser, createUser, deleteUser, updateUser} from '../controllers/user.controller';
+import {getLoggedUser, getUser, getUsers, createUser, deleteUser, updateUser} from '../controllers/user.controller';
 import checkAuth from '../middleware/check-auth';
 
 const router = express.Router();
@@ -7,6 +7,10 @@ const router = express.Router();
 router.post('/', createUser);
 router.use(checkAuth);
 router.get('/me', getLoggedUser);
+router.use((req, res, next) => {
+  checkAuth(req, res, next, true);
+});
+router.get('/', getUsers);
 router.get('/:id', getUser);
 router.delete('/:id', deleteUser);
 router.put('/:id', updateUser);

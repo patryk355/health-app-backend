@@ -7,6 +7,7 @@ import pool from '../db';
 import {getRole} from '../utils/role';
 import {validateCreateUser} from '../validators/user.validator';
 import {User} from '../types/user';
+import {Role, RoleName} from '../types/role';
 
 export const getLoggedUser = async (req: Request, res: Response) => {
   if (typeof process.env.JWT_KEY !== 'string') {
@@ -46,6 +47,33 @@ export const getLoggedUser = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error fetching user:', error);
+    res.status(500).json('Internal Server Error');
+  }
+};
+
+export const getUsers = async (_req: Request, res: Response) => {
+  try {
+    const sql = 'SELECT id, username, email, role_id FROM `users`';
+    const connection = await pool.getConnection();
+    const [users] = await connection.execute<User[]>(sql);
+    const sql2 = 'SELECT id, name FROM `roles`';
+    const [roles] = await connection.execute<Role[]>(sql2);
+    connection.release();
+    if (users.length === 0) {
+      return res.status(403).json('No users found.');
+    }
+    const usersWithRole = users.map(user => {
+      return {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: roles?.find(role => role.id === user.role_id)?.name || null,
+      }
+    });
+    console.debug('user :: getUsers', usersWithRole);
+    res.json(usersWithRole);
+  } catch (error) {
+    console.error('user :: getUsers', error);
     res.status(500).json('Internal Server Error');
   }
 };
