@@ -116,7 +116,7 @@ export const createUser = async (req: Request, res: Response) => {
     const [result1] = await connection.execute<User[]>(sql1, [email]);
     connection.release();
     if (result1.length > 0) {
-      return res.status(400).json('Email already exists.');
+      return res.status(400).json('email_already_exists');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
