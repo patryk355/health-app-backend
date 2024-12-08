@@ -131,3 +131,77 @@ export const deleteRecipe = async (req: Request, res: Response) => {
     res.status(500).json('Internal Server Error');
   }
 };
+
+export const updateRecipe = async (req: Request, res: Response) => {
+  try {
+    const {id} = req.params;
+    if (!id) {
+      return res.status(400).json('Invalid ID.');
+    }
+    const {
+      name,
+      description,
+      ingredients,
+      steps,
+      images,
+      products,
+      active
+    } = req.body;
+
+    const errors = validateCreateRecipe(req.body);
+    if (errors.length > 0) {
+      return res.status(400).json(errors);
+    }
+
+    const connection = await pool.getConnection();
+
+    const sql1 = 'SELECT id FROM `recipes` WHERE id = ?';
+    const [recipes] = await connection.execute<Recipe[]>(sql1, [id]);
+    if (recipes.length === 0) {
+      return res.status(403).json('Recipe not found.');
+    }
+
+    const sql2 = 'UPDATE `recipes` SET name = ?, description = ?, ingredients = ?, steps = ?, images = ?, active = ? WHERE id = ?';
+    const productIds = await getRecipeProducts(parseInt(id));
+    const productIdsToDelete = productIds.filter((productId) => !products?.includes(productId));
+    const productIdsToAdd = products?.filter((productId: number) => !productIds?.includes(productId));
+    console.debug('updateRecipe :: productIdsToDelete:', productIdsToDelete);
+    console.debug('updateRecipe :: productIdsToAdd:', productIdsToAdd);
+    const [result] = await connection.execute<ResultSetHeader>(sql2, [
+      name,
+      description || '',
+      JSON.stringify(ingredients),
+      JSON.stringify(steps),
+      JSON.stringify(images),
+      typeof active === 'boolean' ? active : false,
+      id,
+    ]);
+    console.debug('updateRecipe :: Successfully updated recipe:', result);
+
+    const sql3 = 'INSERT INTO `recipe_product` (recipe_id, product_id) VALUES (?, ?)';
+    if (productIdsToAdd && Array.isArray(productIdsToAdd)) {
+      for (const productId of productIdsToAdd) {
+        await connection.execute<ResultSetHeader>(sql3, [
+          parseInt(id),
+          productId,
+        ]);
+      }
+    }
+
+    const sql4 = 'DELETE FROM `recipe_product` WHERE recipe_id = ? AND product_id = ?';
+    if (productIdsToDelete && Array.isArray(productIdsToDelete)) {
+      for (const productId of productIdsToDelete) {
+        await connection.execute<ResultSetHeader>(sql4, [
+          parseInt(id),
+          productId,
+        ]);
+      }
+    }
+
+    connection.release();
+    res.status(201).json(true);
+  } catch (error) {
+    console.error('Recipe :: updateRecipe', error);
+    res.status(500).json('Internal Server Error');
+  }
+};

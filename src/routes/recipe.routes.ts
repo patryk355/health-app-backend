@@ -3,7 +3,8 @@ import {
   getRecipes,
   getRecipe,
   createRecipe,
-  deleteRecipe
+  deleteRecipe,
+  updateRecipe
 } from '../controllers/recipe.controller';
 import checkAuth from '../middleware/check-auth';
 
@@ -18,7 +19,7 @@ router.post('/', createRecipe);
 router.use((req, res, next) => {
   checkAuth(req, res, next, true);
 });
-router.post('/', createRecipe);
+router.put('/:id', updateRecipe);
 router.delete('/:id', deleteRecipe);
 
 export default router;
