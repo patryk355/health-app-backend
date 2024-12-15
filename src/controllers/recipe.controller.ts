@@ -23,6 +23,7 @@ export const getRecipes = async (req: Request, res: Response) => {
       recipe.ingredients = recipe.ingredients ? JSON.parse(recipe.ingredients) : [];
       recipe.steps = recipe.steps ? JSON.parse(recipe.steps) : [];
       recipe.images = recipe.images ? JSON.parse(recipe.images) : [];
+      recipe.active = recipe.active === 1;
       return recipe;
     });
     res.status(201).json(_result);
@@ -51,6 +52,7 @@ export const getRecipe = async (req: Request, res: Response) => {
     _result.steps = _result.steps ? JSON.parse(_result.steps) : [];
     _result.images = _result.images ? JSON.parse(_result.images) : [];
     _result.products = productIds;
+    _result.active = _result.active === 1;
     res.status(201).json(_result);
   } catch (error) {
     console.error('Recipe :: getRecipe', error);
