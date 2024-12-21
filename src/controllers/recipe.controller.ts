@@ -3,7 +3,7 @@ import {ResultSetHeader} from 'mysql2';
 
 import pool from '../db';
 import {validateCreateRecipe} from '../validators/recipe.validator';
-import {getRecipeProducts} from '../utils/recipe';
+import {getRecipeProducts, prepareRecipe} from '../utils/recipe';
 import {getUserDataFromToken} from '../utils/user';
 import {Recipe} from '../types/recipe';
 
@@ -48,12 +48,8 @@ export const getRecipe = async (req: Request, res: Response) => {
     }
     const _result = result[0];
     const productIds = await getRecipeProducts(parseInt(id));
-    _result.ingredients = _result.ingredients ? JSON.parse(_result.ingredients) : [];
-    _result.steps = _result.steps ? JSON.parse(_result.steps) : [];
-    _result.images = _result.images ? JSON.parse(_result.images) : [];
-    _result.products = productIds;
-    _result.active = _result.active === 1;
-    res.status(201).json(_result);
+    const preparedRecipe = prepareRecipe(_result, productIds);
+    res.status(201).json(preparedRecipe);
   } catch (error) {
     console.error('Recipe :: getRecipe', error);
     res.status(500).json('Internal Server Error');
@@ -204,6 +200,25 @@ export const updateRecipe = async (req: Request, res: Response) => {
     res.status(201).json(true);
   } catch (error) {
     console.error('Recipe :: updateRecipe', error);
+    res.status(500).json('Internal Server Error');
+  }
+};
+
+export const getRandomRecipe = async (_req: Request, res: Response) => {
+  try {
+    const sql = 'SELECT id, name, description, ingredients, steps, images, active, created_by FROM `recipes` WHERE active = true ORDER BY RAND() LIMIT 1';
+    const connection = await pool.getConnection();
+    const [result] = await connection.execute<Recipe[]>(sql);
+    connection.release();
+    if (result.length === 0) {
+      return res.status(403).json('No recipe found.');
+    }
+    const _result = result[0];
+    const productIds = await getRecipeProducts(_result.id);
+    const preparedRecipe = prepareRecipe(_result, productIds);
+    res.status(201).json(preparedRecipe);
+  } catch (error) {
+    console.error('Recipe :: getRandomRecipe', error);
     res.status(500).json('Internal Server Error');
   }
 };

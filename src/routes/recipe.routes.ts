@@ -2,6 +2,7 @@ import express from 'express';
 import {
   getRecipes,
   getRecipe,
+  getRandomRecipe,
   createRecipe,
   deleteRecipe,
   updateRecipe
@@ -11,6 +12,7 @@ import checkAuth from '../middleware/check-auth';
 const router = express.Router();
 
 router.get('/', getRecipes);
+router.get('/random', getRandomRecipe);
 router.get('/:id', getRecipe);
 router.use((req, res, next) => {
   checkAuth(req, res, next);

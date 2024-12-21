@@ -1,5 +1,6 @@
 import {RowDataPacket} from 'mysql2';
 import pool from '../db';
+import {Recipe} from '../types/recipe';
 
 interface Data extends RowDataPacket {
   product_id: number;
@@ -17,4 +18,14 @@ export const getRecipeProducts = async (recipeId: number) => {
     console.error(`Error fetching recipe products (recipe_id=${recipeId}):`, err);
     return [];
   }
+};
+
+export const prepareRecipe = (recipe: Recipe, productIds: number[]): Recipe => {
+  const _recipe = {...recipe};
+  _recipe.ingredients = recipe.ingredients ? JSON.parse(recipe.ingredients) : [];
+  _recipe.steps = recipe.steps ? JSON.parse(recipe.steps) : [];
+  _recipe.images = recipe.images ? JSON.parse(recipe.images) : [];
+  _recipe.products = productIds;
+  _recipe.active = recipe.active === 1;
+  return _recipe;
 };
