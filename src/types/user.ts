@@ -6,6 +6,8 @@ export interface User extends RowDataPacket {
   username: string;
   password: string;
   role_id: number;
+  favorite_products: string; // JSON (number[])
+  favorite_recipes: string; // JSON (number[])
 }
 
 export interface CreateUser {

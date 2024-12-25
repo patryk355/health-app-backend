@@ -7,12 +7,12 @@ const router = express.Router();
 router.post('/', createUser);
 router.use(checkAuth);
 router.get('/me', getLoggedUser);
+router.put('/:id', updateUser);
 router.use((req, res, next) => {
   checkAuth(req, res, next, true);
 });
 router.get('/', getUsers);
 router.get('/:id', getUser);
 router.delete('/:id', deleteUser);
-router.put('/:id', updateUser);
 
 export default router;

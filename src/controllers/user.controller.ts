@@ -7,7 +7,7 @@ import pool from '../db';
 import {getRole} from '../utils/role';
 import {validateCreateUser} from '../validators/user.validator';
 import {User} from '../types/user';
-import {Role, RoleName} from '../types/role';
+import {Role} from '../types/role';
 
 export const getLoggedUser = async (req: Request, res: Response) => {
   if (typeof process.env.JWT_KEY !== 'string') {
@@ -23,7 +23,7 @@ export const getLoggedUser = async (req: Request, res: Response) => {
       return res.status(401).json('Authentication failed!');
     }
     const userId = verifiedToken.userId;
-    const sql = 'SELECT id, username, email, role_id FROM `users` WHERE `id` = ?';
+    const sql = 'SELECT id, username, email, role_id, favorite_products, favorite_recipes FROM `users` WHERE `id` = ?';
     const values = [userId];
     const connection = await pool.getConnection();
     const [result] = await connection.execute<User[]>(sql, values);
@@ -44,6 +44,8 @@ export const getLoggedUser = async (req: Request, res: Response) => {
       email: user.email,
       username: user.username,
       role: role,
+      favorite_products: JSON.parse(user.favorite_products),
+      favorite_recipes: JSON.parse(user.favorite_recipes),
     });
   } catch (error) {
     console.error('Error fetching user:', error);
@@ -68,7 +70,7 @@ export const getUsers = async (_req: Request, res: Response) => {
         username: user.username,
         email: user.email,
         role: roles?.find(role => role.id === user.role_id)?.name || null,
-      }
+      };
     });
     console.debug('user :: getUsers', usersWithRole);
     res.json(usersWithRole);
@@ -171,12 +173,12 @@ export const updateUser = async (req: Request, res: Response) => {
     if (!userId) {
       return res.status(400).json('Invalid ID.');
     }
-    const {username} = req.body;
-    if (!username || username.trim().length === 0) {
+    const {username, favorite_products, favorite_recipes} = req.body;
+    if (username && username.trim().length === 0) {
       return res.status(400).json('Username is required');
     }
 
-    const sql1 = 'SELECT id FROM `users` WHERE id = ?';
+    const sql1 = 'SELECT id, username FROM `users` WHERE id = ?';
     const connection = await pool.getConnection();
     const [users] = await connection.execute<User[]>(sql1, [userId]);
 
@@ -184,10 +186,19 @@ export const updateUser = async (req: Request, res: Response) => {
       return res.status(403).json('User not found.');
     }
 
-    const sql2 = 'UPDATE `users` SET username=? WHERE id = ?';
-    await connection.execute(sql2, [username.trim(), userId]);
+    const sql2 = 'UPDATE `users` SET username=?, favorite_products=?, favorite_recipes=? WHERE id = ?';
+    const favoriteProducts = favorite_products && Array.isArray(favorite_products) ? JSON.stringify(favorite_products) : '[]';
+    const favoriteRecipes = favorite_recipes && Array.isArray(favorite_recipes) ? JSON.stringify(favorite_recipes) : '[]';
+    console.log('users', users, users[0]);
+    const _username = username ? username.trim() : users[0].username;
+    await connection.execute(sql2, [_username, favoriteProducts, favoriteRecipes, userId]);
+    const sql3 = 'SELECT username, favorite_products, favorite_recipes FROM `users` WHERE id = ?';
+    const [result] = await connection.execute<User[]>(sql3, [userId]);
     connection.release();
-    res.status(200).json('User updated successfully.');
+    const updatedUser = result[0];
+    updatedUser.favorite_products = JSON.parse(updatedUser.favorite_products);
+    updatedUser.favorite_recipes = JSON.parse(updatedUser.favorite_recipes);
+    res.status(200).json(updatedUser);
   } catch (error) {
     console.error('User :: updateUser', error);
     res.status(500).json('Internal Server Error');
