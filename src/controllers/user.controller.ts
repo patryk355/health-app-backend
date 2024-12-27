@@ -178,7 +178,7 @@ export const updateUser = async (req: Request, res: Response) => {
       return res.status(400).json('Username is required');
     }
 
-    const sql1 = 'SELECT id, username FROM `users` WHERE id = ?';
+    const sql1 = 'SELECT id, username, favorite_products, favorite_recipes FROM `users` WHERE id = ?';
     const connection = await pool.getConnection();
     const [users] = await connection.execute<User[]>(sql1, [userId]);
 
@@ -187,9 +187,8 @@ export const updateUser = async (req: Request, res: Response) => {
     }
 
     const sql2 = 'UPDATE `users` SET username=?, favorite_products=?, favorite_recipes=? WHERE id = ?';
-    const favoriteProducts = favorite_products && Array.isArray(favorite_products) ? JSON.stringify(favorite_products) : '[]';
-    const favoriteRecipes = favorite_recipes && Array.isArray(favorite_recipes) ? JSON.stringify(favorite_recipes) : '[]';
-    console.log('users', users, users[0]);
+    const favoriteProducts = favorite_products && Array.isArray(favorite_products) ? JSON.stringify(favorite_products) : users[0].favorite_products;
+    const favoriteRecipes = favorite_recipes && Array.isArray(favorite_recipes) ? JSON.stringify(favorite_recipes) : users[0].favorite_recipes;
     const _username = username ? username.trim() : users[0].username;
     await connection.execute(sql2, [_username, favoriteProducts, favoriteRecipes, userId]);
     const sql3 = 'SELECT username, favorite_products, favorite_recipes FROM `users` WHERE id = ?';
