@@ -19,7 +19,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
   let existingUser: User;
 
   try {
-    const sql = 'SELECT id, username, email, password, role_id FROM `users` WHERE `email` = ?';
+    const sql = 'SELECT id, username, email, password, role_id, favorite_products, favorite_recipes FROM `users` WHERE `email` = ?';
     const values = [email];
     const connection = await pool.getConnection();
     const [result] = await connection.execute<User[]>(sql, values);
@@ -70,6 +70,8 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
     email: existingUser.email,
     username: existingUser.username,
     role: role,
+    favorite_products: JSON.parse(existingUser.favorite_products),
+    favorite_recipes: JSON.parse(existingUser.favorite_recipes),
     token: token
   });
 };
