@@ -12,18 +12,6 @@ export const validateCreateProduct = (product: Product) => {
     errors.push('Description is required.');
   }
 
-  if (!product?.advantages) {
-    errors.push('Advantages are required.');
-  }
-
-  if (!product?.disadvantages) {
-    errors.push('Disadvantages are required.');
-  }
-
-  if (!product?.contraindications) {
-    errors.push('Contraindications are required.');
-  }
-
   if (typeof product?.category_id !== 'number') {
     errors.push('Category_id is invalid.');
   }
