@@ -44,8 +44,8 @@ export const getLoggedUser = async (req: Request, res: Response) => {
       email: user.email,
       username: user.username,
       role: role,
-      favorite_products: JSON.parse(user.favorite_products),
-      favorite_recipes: JSON.parse(user.favorite_recipes),
+      favorite_products: user.favorite_products,
+      favorite_recipes: user.favorite_recipes,
     });
   } catch (error) {
     console.error('Error fetching user:', error);
@@ -195,8 +195,6 @@ export const updateUser = async (req: Request, res: Response) => {
     const [result] = await connection.execute<User[]>(sql3, [userId]);
     connection.release();
     const updatedUser = result[0];
-    updatedUser.favorite_products = JSON.parse(updatedUser.favorite_products);
-    updatedUser.favorite_recipes = JSON.parse(updatedUser.favorite_recipes);
     res.status(200).json(updatedUser);
   } catch (error) {
     console.error('User :: updateUser', error);

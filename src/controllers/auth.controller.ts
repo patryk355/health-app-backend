@@ -1,11 +1,12 @@
 import {Response, Request, NextFunction} from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+
 import pool from '../db';
 import {getRole} from '../utils/role';
 import {User} from '../types/user';
 
-export const auth = async (req: Request, res: Response, next: NextFunction) => {
+export const auth = async (req: Request, res: Response, _next: NextFunction) => {
   if (!process.env.JWT_KEY) {
     return res.status(500).json('Internal Server Error');
   }
@@ -70,8 +71,8 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
     email: existingUser.email,
     username: existingUser.username,
     role: role,
-    favorite_products: JSON.parse(existingUser.favorite_products),
-    favorite_recipes: JSON.parse(existingUser.favorite_recipes),
+    favorite_products: existingUser.favorite_products,
+    favorite_recipes: existingUser.favorite_recipes,
     token: token
   });
 };
